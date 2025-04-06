@@ -1,9 +1,9 @@
 #include "queue.h"
 #include "tile_game.h"
 
-int is_same_board(struct game_state state, struct linked_list *visited);
+bool is_same_board(struct game_state state, struct linked_list *visited);
 int is_goal(struct game_state state);
-
+uint64_t serialize_tiles_only(struct game_state state);
 
 
 
@@ -31,7 +31,7 @@ int number_of_moves(struct game_state start) {
 	q.data = queue;	
 	
 	enqueue(&q, start);
-	insert_at_tail(&repeats, (size_t)serialize(start));
+	insert_at_tail(&repeats, (size_t)serialize_tiles_only(start));
 
 
 	while(q.data.head != NULL)
@@ -55,7 +55,7 @@ int number_of_moves(struct game_state start) {
 		if(!is_same_board(copy, &repeats))
 		{
 			//copy.numsteps++;
-			insert_at_tail(&repeats, serialize(copy));
+			insert_at_tail(&repeats, serialize_tiles_only(copy));
 			enqueue(&q, copy);
 		}
 
@@ -63,7 +63,7 @@ int number_of_moves(struct game_state start) {
 		move_right(&copy);
 		if(!is_same_board(copy, &repeats))
 		{
-			insert_at_tail(&repeats, serialize(copy));
+			insert_at_tail(&repeats, serialize_tiles_only(copy));
 			enqueue(&q, copy);
 		}
 
@@ -71,7 +71,7 @@ int number_of_moves(struct game_state start) {
 		move_down(&copy);
 		if(!is_same_board(copy, &repeats))
 		{
-			insert_at_tail(&repeats, serialize(copy));
+			insert_at_tail(&repeats, serialize_tiles_only(copy));
 			enqueue(&q, copy);
 		}
 
@@ -79,7 +79,7 @@ int number_of_moves(struct game_state start) {
 		move_left(&copy);
 		if(!is_same_board(copy, &repeats))
 		{
-			insert_at_tail(&repeats, serialize(copy));
+			insert_at_tail(&repeats, serialize_tiles_only(copy));
 			enqueue(&q, copy);
 		}
 
@@ -94,8 +94,20 @@ int number_of_moves(struct game_state start) {
 
 	return 0; }
 
+bool is_same_board(struct game_state state, struct linked_list *visited) {
+    uint64_t current_serialized = serialize_tiles_only(state);
 
+    struct list_node *ptr = visited->head;
+    while (ptr != NULL) {
+        if ((uint64_t)(ptr->value) == current_serialized) {
+            return true;  // already seen this board
+        }
+        ptr = ptr->next;
+    }
+    return false;  // not seen before
+}
 
+/*
 int is_same_board(struct game_state state, struct linked_list *visited) {
     struct list_node *cur = visited->head;
     while (cur != NULL) {
@@ -119,8 +131,13 @@ int is_same_board(struct game_state state, struct linked_list *visited) {
         cur = cur->next;
     }
 
+
+
+
+
+
     return 0; // No match, boards are different
-}
+}*/
 
 
 int is_goal(struct game_state state) {
@@ -139,5 +156,18 @@ int is_goal(struct game_state state) {
     }
 
     return 1; // Board is in goal state
+}
+
+
+uint64_t serialize_tiles_only(struct game_state state) {
+    uint64_t result = 0;
+    //uint8_t tiles = state.tiles;
+    for (int row = 0; row < 4; ++row) {
+        for (int col = 0; col < 4; ++col) {
+            result <<= 4; // Shift 4 bits to make room
+            result |= (state.tiles[row][col] & 0xF); // Mask to make sure only 4 bits go in
+        }
+    }
+    return result;
 }
 
