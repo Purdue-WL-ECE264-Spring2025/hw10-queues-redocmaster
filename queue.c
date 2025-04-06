@@ -42,7 +42,7 @@ int number_of_moves(struct game_state start) {
 
 		if(is_goal(current))
 		{
-			free_list(queue);
+			free_list(q.data);
 			free_list(repeats);
 			return (int)current.num_steps;	
 	
@@ -145,7 +145,6 @@ int is_goal(struct game_state state) {
 
     for (int r = 0; r < 4; ++r) {
         for (int c = 0; c < 4; ++c) {
-            // Last tile should be 0 (empty)
             if (r == 3 && c == 3) {
                 if (state.tiles[r][c] != 0) return 0;
             } else {
@@ -155,10 +154,11 @@ int is_goal(struct game_state state) {
         }
     }
 
-    return 1; // Board is in goal state
+    return 1; // Board is correct
 }
 
-
+//looked up how to do this because the old code was too slow. This way we are just checking the serialized version 
+//instead of going through a whole loop every time we look at something. Hopefully this works.
 uint64_t serialize_tiles_only(struct game_state state) {
     uint64_t result = 0;
     //uint8_t tiles = state.tiles;
